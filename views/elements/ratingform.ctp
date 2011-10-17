@@ -28,7 +28,7 @@
 	<div class="ratingsForm">
     <h2><?php __('Rate'); ?></h2>
 	<?php 
-	$model = Inflector::classify($this->params['controller']);
+	$model = Inflector::classify($this->request->params['controller']);
 	$viewData = strtolower($model);
 		echo $this->Html->script('admin/jquery-ui-1.8.custom.min');
 		echo $this->Html->script('jquery.stars');
