@@ -2,14 +2,14 @@
   <?php if (!empty($ratingEntries)) { ?>
   <div class="ratings index">
     <div class="indexContainer">
- 	<h2><?php __('Ratings'); ?></h2>
+ 	<h2><?php echo __('Ratings'); ?></h2>
 	<?php
 		foreach ($ratingEntries as $ratingEntry) {
 	?>
     	<div class="indexRow" id="headingRow">
-        	<div class="indexCell columnHeading"><?php __('Full Name'); ?></div>
-        	<div class="indexCell columnHeading"><?php __('Rating'); ?></div>
-        	<div class="indexCell columnHeading"><?php __('Comment'); ?></div>
+        	<div class="indexCell columnHeading"><?php echo __('Full Name'); ?></div>
+        	<div class="indexCell columnHeading"><?php echo __('Rating'); ?></div>
+        	<div class="indexCell columnHeading"><?php echo __('Comment'); ?></div>
         </div>
         <div class="indexRow">
         	<div class="indexCell" id="gallery"><?php echo $this->element('snpsht', array('plugin' => 'users', 'useGallery' => true, 'userId' => $ratingEntry['User']['id'], 'thumbSize' => 'small', 'thumbLink' => '/users/users/view/'.$ratingEntry['User']['id'], 'showFirstName' => true, 'showLastName' => true));  ?></div>
@@ -26,7 +26,7 @@
     
     
 	<div class="ratingsForm">
-    <h2><?php __('Rate'); ?></h2>
+    <h2><?php echo __('Rate'); ?></h2>
 	<?php 
 	$model = Inflector::classify($this->request->params['controller']);
 	$viewData = strtolower($model);
