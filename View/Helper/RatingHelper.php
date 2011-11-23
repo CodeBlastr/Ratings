@@ -17,14 +17,14 @@
  * @package 	ratings
  * @subpackage 	ratings.views.helpers
  */
-class RatingHelper extends HtmlHelper {
+class RatingHelper extends AppHelper {
 
 /**
  * helpers variable
  *
  * @var array
  */
-	public $helpers = array ('Html', 'Form');
+	public $helpers = array ('Html', 'Form', 'Js' => 'Jquery');
 
 /**
  * Allowed types of html list elements
@@ -47,21 +47,20 @@ class RatingHelper extends HtmlHelper {
 		'url' => array(),
 		'link' => true,
 		'redirect' => true,
-		'class' => 'rating',
-		'comments' => false);
+		'class' => 'rating');
 
+/**
+ * Displays a bunch of rating links wrapped into a list element of your choice
+ *
+ * @param array $options
+ * @param array $urlHtmlAttributes Attributes for the rating links inside the list
+ * @return string markup that displays the rating options
+ */
 
-	/**
-	 * Displays a bunch of rating links wrapped into a list element of your choice
-	 *
-	 * @param array $options
-	 * @param array $urlHtmlAttributes Attributes for the rating links inside the list
-	 * @return string markup that displays the rating options
-	 */
 	public function display($options = array(), $urlHtmlAttributes = array()) {
 		$options = array_merge($this->defaults, $options);
 		if (empty($options['item'])) {
-			throw new Exception(__d('ratings', 'You must set the id of the item you want to rate.', true), E_USER_NOTICE);
+			throw new Exception(__d('ratings', 'You must set the id of the item you want to rate.'), E_USER_NOTICE);
 		}
 
 		if ($options['type'] == 'radio') {
@@ -76,9 +75,9 @@ class RatingHelper extends HtmlHelper {
 				if ($options['redirect']) {
 					$url['redirect'] = 1;
 				}
-				$link = $this->link($i, $url, $urlHtmlAttributes);
+				$link = $this->Html->link($i, $url, $urlHtmlAttributes);
 			}
-			$stars .= $this->tag('li', $link, array('class' => 'star' . $i));
+			$stars .= $this->Html->tag('li', $link, array('class' => 'star' . $i));
 		}
 
 		if (in_array($options['type'], $this->allowedTypes)) {
@@ -87,7 +86,7 @@ class RatingHelper extends HtmlHelper {
 			$type = 'ul';
 		}
 
-		$stars = $this->tag($type, $stars, array('class' => $options['class'] . ' ' . 'rating-' . round($options['value'], 0)));
+		$stars = $this->Html->tag($type, $stars, array('class' => $options['class'] . ' ' . 'rating-' . round($options['value'], 0)));
 		return $stars;
 	}
 
@@ -151,8 +150,9 @@ class RatingHelper extends HtmlHelper {
  */
 	public function starForm($options = array(), $urlHtmlAttributes = array()) {
 		$options = array_merge($this->defaults, $options);
+		$flush = false;
 		if (empty($options['item'])) {
-			trigger_error(__d('ratings', 'You must set the id of the item you want to rate.', true), E_USER_NOTICE);
+			trigger_error(__d('ratings', 'You must set the id of the item you want to rate.'), E_USER_NOTICE);
 		}
 		$result = '';
 		if ($options['createForm']) {
@@ -164,16 +164,21 @@ class RatingHelper extends HtmlHelper {
 		}
 		$result .= $this->Form->input($inputField, array(
 			'type' => 'radio',
+			'legend' => false,
 			'value' => isset($options['value']) ? round($options['value']) : 0,
 			'options' => array_combine(range(1, $options['stars']), range(1, $options['stars']))));
-		$result .= $this->Form->input('comment', array(
-			'type' => 'text', 'style'=>'width:99%',
-			));
 		if ($options['createForm']) {
-			$result .= $this->Form->submit(__d('ratings', 'Rate!', true)) . "\n";
+			if (!empty($options['target']) && !empty($options['createForm']['url']) && !empty($options['createForm']['ajaxOptions'])) {
+				$result .= $this->Js->submit(__d('ratings', 'Rate!'), array_merge(array('url' => $options['createForm']['url']), $options['createForm']['ajaxOptions'])) . "\n";
+				$flush = true;
+			} else {
+				$result .= $this->Form->submit(__d('ratings', 'Rate!')) . "\n";
+			}
 			$result .= $this->Form->end() . "\n";
+			if ($flush) {
+				$this->Js->writeBuffer();
+			}
 		}
 		return $result;
 	}
-	
 }

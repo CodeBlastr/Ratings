@@ -79,7 +79,7 @@ class RatableBehavior extends ModelBehavior {
 		if (!isset($this->settings[$Model->alias])) {
 			$this->settings[$Model->alias] = $this->_defaults;
 		}
-		$this->settings[$Model->alias] = am($this->settings[$Model->alias], ife(is_array($settings), $settings, array()));
+		$this->settings[$Model->alias] = array_merge($this->settings[$Model->alias], $settings);
 		if (empty($this->settings[$Model->alias]['modelClass'])) {
 			$this->settings[$Model->alias]['modelClass'] = $Model->name;
 		}
@@ -111,7 +111,7 @@ class RatableBehavior extends ModelBehavior {
  * @param numeric $value
  * @return mixed boolean or calculated sum
  */
-	public function saveRating(Model $Model, $foreignKey = null, $userId = null, $value = 0, $comment = null) {
+	public function saveRating(Model $Model, $foreignKey = null, $userId = null, $value = 0) {
 		$type = 'saveRating';
 		$this->beforeRateCallback($Model, compact('foreignKey', 'userId', 'value', 'update', 'type'));
 		if (!$this->isRatedBy($Model, $foreignKey, $userId) || $this->settings[$Model->alias]['update'] == true) {
@@ -119,7 +119,6 @@ class RatableBehavior extends ModelBehavior {
 			$data['Rating']['model'] = $Model->alias;
 			$data['Rating']['user_id'] = $userId;
 			$data['Rating']['value'] = $value;
-			$data['Rating']['comment'] = $comment;
 			$oldRating = null;
 			$update = false;
 			if ($this->settings[$Model->alias]['update'] == true) {
@@ -206,7 +205,7 @@ class RatableBehavior extends ModelBehavior {
  */
 	public function decrementRating(Model $Model, $foreignKey = null, $oldRating, $saveToField = true, $mode = 'average', $update = false) {
 		if (!in_array($mode, array_keys($this->modes))) {
-			throw new InvalidArgumentException(sprintf(__d('ratings', 'Invalid rating mode %s.', true),$mode));
+			throw new InvalidArgumentException(sprintf(__d('ratings', 'Invalid rating mode %s.'),$mode));
 		}
 
 		$data = $Model->find('first', array(
@@ -263,7 +262,7 @@ class RatableBehavior extends ModelBehavior {
  */
 	public function incrementRating(Model $Model, $foreignKey = null, $value, $saveToField = true, $mode = 'average', $update = false) {
 		if (!in_array($mode, array_keys($this->modes))) {
-			throw new InvalidArgumentException(sprintf(__d('ratings', 'Invalid rating mode %s.', true),$mode));
+			throw new InvalidArgumentException(sprintf(__d('ratings', 'Invalid rating mode %s.'),$mode));
 		}
 
 		$data = $Model->find('first', array(
@@ -313,8 +312,8 @@ class RatableBehavior extends ModelBehavior {
  * This method does always a calculation of the the values based on SQL AVG()
  * and SUM(). Please note that this is relativly slow compared to incrementing
  * the values, see Ratable::incrementRating()
- *
- *
+ * 
+ * Did use $result[0][0]['rating'] .. Joel@RazorIT changed to $result[0]['Rating']['rating']
  *
  * @param AppModel $Model
  * @param string $foreignKey
@@ -324,28 +323,36 @@ class RatableBehavior extends ModelBehavior {
  */
 	public function calculateRating(Model $Model, $foreignKey = null, $saveToField = true, $mode = 'average') {
 		if (!in_array($mode, array_keys($this->modes))) {
-			throw new InvalidArgumentException(sprintf(__d('ratings', 'Invalid rating mode %s.', true),$mode));
+			throw new InvalidArgumentException(sprintf(__d('ratings', 'Invalid rating mode %s.'),$mode));
 		}
 
-		$result = $Model->Rating->find(
-			array('Rating.foreign_key' => $foreignKey, 'Rating.model' => $Model->alias),
-			array($this->modes[$mode] . '(Rating.value) AS rating'));
-		if (empty($result[0]['rating'])) {
-			$result[0]['rating'] = 0;
+		$result = $Model->Rating->find('all', array(
+			'contain' => array($Model->alias),
+			'fields' => array(
+				$this->modes[$mode] . '(Rating.value) AS rating'),
+			'conditions' => array(
+				'Rating.foreign_key' => $foreignKey,
+				'Rating.model' => $Model->alias)));
+#debug($result);
+		if (empty($result[0]['Rating']['rating'])) {
+			$result[0]['Rating']['rating'] = 0;
 		}
-		$Model->newRating = $result[0]['rating'];
+#debug($result[0]['Rating']['rating']);
+		$Model->newRating = $result[0]['Rating']['rating'];
 		if ($saveToField || is_string($saveToField)) {
 			if (is_string($saveToField)) {
-				$data[$Model->alias][$saveToField] = $result[0]['rating'];
+				$data[$Model->alias][$saveToField] = $result[0]['Rating']['rating'];
 			} else {
-				$data[$Model->alias][$this->settings[$Model->alias]['field']] = $result[0]['rating'];
+				$data[$Model->alias][$this->settings[$Model->alias]['field']] = $result[0]['Rating']['rating'];
 			}
 			$data[$Model->alias][$Model->primaryKey] = $foreignKey;
+
 			return $Model->save($data, array(
 				'validate' => $this->settings[$Model->alias]['modelValidate'],
 				'callbacks' => $this->settings[$Model->alias]['modelCallbacks']));
 		}
-		return $result[0]['rating'];
+
+		return $result[0]['Rating']['rating'];
 	}
 
 /**
@@ -363,7 +370,7 @@ class RatableBehavior extends ModelBehavior {
 		}
 
 		$entry = $Model->Rating->find($findMethod, array(
-			'recursive'-1,
+			'recursive' => -1,
 			'conditions' => array(
 				'Rating.foreign_key' => $foreignKey,
 				'Rating.user_id' => $userId,
@@ -427,19 +434,19 @@ class RatableBehavior extends ModelBehavior {
 		$options = array_merge($defaults, $options);
 
 		if (!in_array($rating, array_keys($options['values']))) {
-			throw new Exception(__d('ratings', 'Invalid Rating', true));
+			throw new OutOfBoundsException(__d('ratings', 'Invalid Rating'));
 		}
 
 		$record = $Model->find('first', $options['find']);
 
 		if (empty($record)) {
-			throw new Exception(__d('ratings', 'Invalid Record', true));
+			throw new OutOfBoundsException(__d('ratings', 'Invalid Record'));
 		}
 
 		if ($options['userField'] !== false && $Model->getColumnType($options['userField'])) {
 			if ($record[$Model->alias][$options['userField']] == $userId) {
 				$Model->data = $record;
-				throw new LogicException(__d('ratings', 'You can not vote on your own records', true));
+				throw new LogicException(__d('ratings', 'You can not vote on your own records'));
 			}
 		}
 
@@ -447,7 +454,7 @@ class RatableBehavior extends ModelBehavior {
 			$Model->data = $record;
 			return true;
 		} else {
-			throw new Exception(__d('ratings', 'You have already rated this record', true));
+			throw new Exception(__d('ratings', 'You have already rated this record'));
 		}
 	}
 
@@ -467,6 +474,7 @@ class RatableBehavior extends ModelBehavior {
 			if ($type == 'removeRating') {
 				$value = $oldRating['Rating']['value'];
 			}
+
 			if ($Model->getColumnType($this->_fieldName(round($value, 0)))) {
 				$data = $Model->find('first', array(
 					'conditions' => array(
@@ -477,10 +485,12 @@ class RatableBehavior extends ModelBehavior {
 					$oldId = round($oldRating['Rating']['value']);
 					$data[$Model->alias][$this->_fieldName($oldId)] -= 1;
 				}
+
 				if ($type == 'saveRating') {
 					$newId = round($value);
 					$data[$Model->alias][$this->_fieldName($newId)] += 1;
 				}
+
 				return $Model->save($data, array(
 					'validate' => $this->settings[$Model->alias]['modelValidate'],
 					'callbacks' => $this->settings[$Model->alias]['modelCallbacks']));
@@ -502,4 +512,5 @@ class RatableBehavior extends ModelBehavior {
 		}
 		return $prefix . $postfix;
 	}
+
 }
