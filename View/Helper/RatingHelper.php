@@ -163,6 +163,8 @@ class RatingHelper extends AppHelper {
 			$inputField = $options['inputField'];
 		}
 		$result .= $this->Form->input($inputField, array(
+                        #'label' => false, # added by joel@RazorIT
+                        'div' => array('style' => 'display:none'), # added by joel@RazorIT
 			'type' => 'radio',
 			'legend' => false,
 			'value' => isset($options['value']) ? round($options['value']) : 0,
