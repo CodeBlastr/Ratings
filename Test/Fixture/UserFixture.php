@@ -40,37 +40,14 @@ class UserFixture extends CakeTestFixture {
  */
 	public $table = 'users';
 
+	
 /**
- * Fields
+ * Import
  *
- * @var array $fields
- * @access public
+ * @var array
  */
-	public $fields = array(
-		'id' => array('type'=>'string', 'null' => false, 'length' => 36, 'key' => 'primary'),
-		'account_type' => array('type' => 'string', 'null' => false, 'length' => 8),
-		'url' => array('type'=>'string', 'null' => false, 'key' => 'unique'),
-		'slug' => array('type'=>'string', 'null' => false),
-		'username' => array('type'=>'string', 'null' => false),
-		'email' => array('type'=>'string', 'null' => true, 'default' => NULL, 'length' => 255),
-		'email_authenticated' => array('type'=>'boolean', 'null' => false, 'default' => '0'),
-		'email_token' => array('type'=>'string', 'null' => true, 'default' => NULL, 'length' => 255),
-		'email_token_expires' => array('type'=>'datetime', 'null' => true, 'default' => NULL),
-		'passwd' => array('type'=>'string', 'null' => true, 'default' => NULL, 'length' => 128),
-		'password_token' => array('type'=>'string', 'null' => true, 'default' => NULL, 'length' => 128),
-		'tos' => array('type'=>'boolean', 'null' => false, 'default' => '0'),
-		'active' => array('type'=>'boolean', 'null' => false, 'default' => '0'),
-		'public_master_key' => array('type'=>'text', 'null' => true, 'default' => NULL),
-		'public_session_key' => array('type'=>'text', 'null' => true, 'default' => NULL),
-		'private_session_key' => array('type'=>'text', 'null' => true, 'default' => NULL),
-		'last_activity' => array('type'=>'datetime', 'null' => true, 'default' => NULL),
-		'created' => array('type'=>'datetime', 'null' => true, 'default' => NULL),
-		'modified' => array('type'=>'datetime', 'null' => true, 'default' => NULL),
-		'indexes' => array(
-			'PRIMARY' => array('column' => 'id', 'unique' => 1),
-			'UNIQUE_URL' => array('column' => 'url', 'unique' => 1)
-		)
-	);
+	public $import = array('config' => 'Users.User');
+	
 /**
  * Records
  *

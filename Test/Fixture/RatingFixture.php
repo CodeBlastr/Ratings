@@ -34,26 +34,13 @@ class RatingFixture extends CakeTestFixture {
  * @access public
  */
 	public $table = 'ratings';
-
+	
 /**
- * Fields
+ * Import
  *
  * @var array
- * @access public
  */
-	public $fields = array(
-		'id' => array('type' => 'string', 'null' => false, 'default' => NULL, 'length' => 36, 'key' => 'primary'),
-		'user_id' => array('type' => 'string', 'null' => false, 'default' => NULL, 'length' => 36),
-		'foreign_key' => array('type' => 'string', 'null' => false, 'default' => NULL, 'length' => 36),
-		'model' => array('type' => 'string', 'null' => false, 'default' => NULL, 'key' => 'index'),
-		'value' => array('type' => 'float', 'null' => true, 'default' => '0', 'length' => '8,4'),
-		'created' => array('type' => 'datetime', 'null' => true, 'default' => NULL),
-		'modified' => array('type' => 'datetime', 'null' => true, 'default' => NULL),
-		'indexes' => array(
-			'PRIMARY' => array('column' => 'id', 'unique' => 1),
-			'UNIQUE_RATING' => array('column' => array('user_id', 'foreign_key', 'model'), 'unique' => 1)
-		)
-	);
+	public $import = array('config' => 'Ratings.Rating');
 
 /**
  * Records
