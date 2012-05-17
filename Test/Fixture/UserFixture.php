@@ -39,7 +39,6 @@ class UserFixture extends CakeTestFixture {
  * @access public
  */
 	public $table = 'users';
-
 	
 /**
  * Import
@@ -47,6 +46,38 @@ class UserFixture extends CakeTestFixture {
  * @var array
  */
 	public $import = array('config' => 'Users.User');
+	
+/**
+ * Fields
+ *
+ * @var array $fields
+ * @access public
+ 
+	public $fields = array(
+		'id' => array('type'=>'string', 'null' => false, 'length' => 36, 'key' => 'primary'),
+		'account_type' => array('type' => 'string', 'null' => false, 'length' => 8),
+		'url' => array('type'=>'string', 'null' => false, 'key' => 'unique'),
+		'slug' => array('type'=>'string', 'null' => false),
+		'username' => array('type'=>'string', 'null' => false),
+		'email' => array('type'=>'string', 'null' => true, 'default' => NULL, 'length' => 255),
+		'email_verified' => array('type'=>'boolean', 'null' => false, 'default' => '0'),
+		'email_token' => array('type'=>'string', 'null' => true, 'default' => NULL, 'length' => 255),
+		'email_token_expires' => array('type'=>'datetime', 'null' => true, 'default' => NULL),
+		'passwd' => array('type'=>'string', 'null' => true, 'default' => NULL, 'length' => 128),
+		'password_token' => array('type'=>'string', 'null' => true, 'default' => NULL, 'length' => 128),
+		'tos' => array('type'=>'boolean', 'null' => false, 'default' => '0'),
+		'active' => array('type'=>'boolean', 'null' => false, 'default' => '0'),
+		'public_master_key' => array('type'=>'text', 'null' => true, 'default' => NULL),
+		'public_session_key' => array('type'=>'text', 'null' => true, 'default' => NULL),
+		'private_session_key' => array('type'=>'text', 'null' => true, 'default' => NULL),
+		'last_activity' => array('type'=>'datetime', 'null' => true, 'default' => NULL),
+		'created' => array('type'=>'datetime', 'null' => true, 'default' => NULL),
+		'modified' => array('type'=>'datetime', 'null' => true, 'default' => NULL),
+		'indexes' => array(
+			'PRIMARY' => array('column' => 'id', 'unique' => 1),
+			'UNIQUE_URL' => array('column' => 'url', 'unique' => 1)
+		)
+	);*/
 	
 /**
  * Records
@@ -62,7 +93,7 @@ class UserFixture extends CakeTestFixture {
 			'slug' => 'phpnut',
 			'username'  => 'phpnut',
 			'email' => 'larry.masters@cakedc.com',
-			'email_authenticated' => 1,
+			'email_verified' => 1,
 			'email_token' => 'testtoken',
 			'email_token_expires' => '2008-03-25 02:45:46',
 			'passwd'  => 'test', // test
@@ -83,7 +114,7 @@ class UserFixture extends CakeTestFixture {
 			'slug' => 'floriank',
 			'username'  => 'floriank',
 			'email' => 'florian.kraemer@cakedc.com',
-			'email_authenticated' => '1',
+			'email_verified' => '1',
 			'email_token' => '',
 			'email_token_expires' => '2008-03-25 02:45:46',
 			'passwd'  => 'secretkey', // secretkey
@@ -104,7 +135,7 @@ class UserFixture extends CakeTestFixture {
 			'slug' => 'user1',
 			'username'  => 'user1',
 			'email' => 'testuser1@testuser.com',
-			'email_authenticated' => 0,
+			'email_verified' => 0,
 			'email_token' => 'testtoken2',
 			'email_token_expires' => '2008-03-28 02:45:46',
 			'passwd'  => 'newpass', // newpass
@@ -125,7 +156,7 @@ class UserFixture extends CakeTestFixture {
 			'slug' => 'oistest',
 			'username'  => 'oidtest',
 			'email' => 'oidtest@testuser.com',
-			'email_authenticated' => 0,
+			'email_verified' => 0,
 			'email_token' => 'testtoken2',
 			'email_token_expires' => '2008-03-28 02:45:46',
 			'passwd'  => 'newpass', // newpass
@@ -153,4 +184,3 @@ class UserFixture extends CakeTestFixture {
 	}
 
 }
-?>

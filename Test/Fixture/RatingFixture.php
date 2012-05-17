@@ -43,6 +43,27 @@ class RatingFixture extends CakeTestFixture {
 	public $import = array('config' => 'Ratings.Rating');
 
 /**
+ * Fields
+ *
+ * @var array
+ * @access public
+	public $fields = array(
+		'id' => array('type' => 'string', 'null' => false, 'default' => NULL, 'length' => 36, 'key' => 'primary'),
+		'user_id' => array('type' => 'string', 'null' => false, 'default' => NULL, 'length' => 36),
+		'foreign_key' => array('type' => 'string', 'null' => false, 'default' => NULL, 'length' => 36),
+		'model' => array('type' => 'string', 'null' => false, 'default' => NULL, 'key' => 'index'),
+		'value' => array('type' => 'float', 'null' => true, 'default' => '0', 'length' => '8,4'),
+		'created' => array('type' => 'datetime', 'null' => true, 'default' => NULL),
+		'modified' => array('type' => 'datetime', 'null' => true, 'default' => NULL),
+		'indexes' => array(
+			'PRIMARY' => array('column' => 'id', 'unique' => 1),
+			'UNIQUE_RATING' => array('column' => array('user_id', 'foreign_key', 'model'), 'unique' => 1)
+		)
+	);*/
+ 
+ 
+
+/**
  * Records
  *
  * @var array
@@ -74,4 +95,3 @@ class RatingFixture extends CakeTestFixture {
 			'created' => '2009-01-01 12:12:12',
 			'modified' => '2009-01-01 12:12:12'));
 }
-?>

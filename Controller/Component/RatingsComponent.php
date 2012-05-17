@@ -121,7 +121,7 @@ class RatingsComponent extends Component {
 		}
 		if (!method_exists($Controller, 'rate')) {
 			if (isset($params['rate']) && isset($params['rating']) && $this->enabled == true) {
-				debug( $this->rate($params['rate'], $params['rating'], $Controller->Auth->user('id'), !empty($params['redirect'])) );
+				$this->rate($params['rate'], $params['rating'], $Controller->Auth->user('id'), !empty($params['redirect']));
 			}
 		}
 	}
@@ -136,7 +136,7 @@ class RatingsComponent extends Component {
 	public function rate($rate, $rating, $user, $redirect = false) {
 		$Controller = $this->Controller;
 		$Controller->{$this->modelName}->id = $rate;
-		if ($Controller->{$this->modelName}->exists(true)) {
+		if ($Controller->{$this->modelName}->exists(null)) {
 			if ($Controller->{$this->modelName}->saveRating($rate, $user, $rating)) {
 				$rating = round($Controller->{$this->modelName}->newRating);
 				$message = __d('ratings', 'Your rate was successfull.');
