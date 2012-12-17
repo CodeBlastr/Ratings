@@ -65,4 +65,7 @@ class Rating extends RatingsAppModel {
 			'value' => array(
 				'required' => $rules['notEmpty']));
 	}
+    
+  
+
 }

@@ -162,7 +162,7 @@ class RatableBehavior extends ModelBehavior {
 				return $result;
 			}
 		}
-		return false;
+		return false; 
 	}
 
 
@@ -374,8 +374,8 @@ class RatableBehavior extends ModelBehavior {
 		}
 
 		if (!$Model->hasField($saveToField)) {
-           //return $result[0][0]['rating'];
-            return $result[0]['Rating']['rating'];
+          // return $result[0][0]['rating'];
+           return $result[0]['Rating']['rating'];
 		}
 
 		$data = array($Model->alias => array(
