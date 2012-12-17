@@ -58,7 +58,7 @@ class RatingHelper extends AppHelper {
  */
 
 	public function display($options = array(), $urlHtmlAttributes = array()) {
-		$options = array_merge($this->defaults, $options);
+     	$options = array_merge($this->defaults, $options);
 		if (empty($options['item'])) {
 			throw new Exception(__d('ratings', 'You must set the id of the item you want to rate.'), E_USER_NOTICE);
 		}
@@ -66,7 +66,7 @@ class RatingHelper extends AppHelper {
 		if ($options['type'] == 'radio') {
 			return $this->starForm($options, $urlHtmlAttributes);
 		}
-
+  
 		$stars = null;
 		for ($i = 1; $i <= $options['stars']; $i++) {
 			$link = null;
@@ -85,7 +85,7 @@ class RatingHelper extends AppHelper {
 		} else {
 			$type = 'ul';
 		}
-
+     
 		$stars = $this->Html->tag($type, $stars, array('class' => $options['class'] . ' ' . 'rating-' . round($options['value'], 0)));
 		return $stars;
 	}

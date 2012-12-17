@@ -115,7 +115,7 @@ class RatableBehavior extends ModelBehavior {
  * @return mixed boolean or calculated sum
  */
 	public function saveRating(Model $Model, $foreignKey = null, $userId = null, $value = 0) {
-		$type = 'saveRating';
+       	$type = 'saveRating';
 		$this->beforeRateCallback($Model, compact('foreignKey', 'userId', 'value', 'update', 'type'));
 		$oldRating = $this->isRatedBy($Model, $foreignKey, $userId);
 		if (!$oldRating || $this->settings[$Model->alias]['update'] == true) {
@@ -359,7 +359,7 @@ class RatableBehavior extends ModelBehavior {
 				'Rating.model' => $Model->alias
 			)
 		));
-
+        
 		if (empty($result[0][0]['rating'])) {
 			$result[0][0]['rating'] = 0;
 		}
@@ -374,14 +374,15 @@ class RatableBehavior extends ModelBehavior {
 		}
 
 		if (!$Model->hasField($saveToField)) {
-			return $result[0][0]['rating'];
+           //return $result[0][0]['rating'];
+            return $result[0]['Rating']['rating'];
 		}
 
 		$data = array($Model->alias => array(
 			$Model->primaryKey => $foreignKey,
 			$saveToField => $result[0][0]['rating'],
 		));
-
+        
 		return $Model->save($data, array(
 			'validate' => $this->settings[$Model->alias]['modelValidate'],
 			'callbacks' => $this->settings[$Model->alias]['modelCallbacks']
@@ -430,7 +431,7 @@ class RatableBehavior extends ModelBehavior {
  * @return void
  */
 	public function afterRateCallback(Model $Model, $data = array()) {
-		if (method_exists($Model, 'afterRate')) {
+     	if (method_exists($Model, 'afterRate')) {
 			$Model->afterRate($data);
 		}
 	}
@@ -443,7 +444,8 @@ class RatableBehavior extends ModelBehavior {
  * @return void
  */
 	public function beforeRateCallback(Model $Model, $data = array()) {
-		if (method_exists($Model, 'beforeRate')) {
+        
+        if (method_exists($Model, 'beforeRate')) {
 			$Model->beforeRate($data);
 		}
 	}
