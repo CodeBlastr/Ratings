@@ -5,3 +5,6 @@
 .ui-stars-star-hover a{background-position:0 -64px;}
 .ui-stars-cancel-hover a{background-position:0 -16px;}
 .ui-stars-star-disabled,.ui-stars-star-disabled a,.ui-stars-cancel-disabled a{cursor:default!important;}
+.radio,.checkbox { display:none !important;}
+.ui-stars-star { width:16px !important; margin-right: 10px!important;}
+input[type="submit"] { display:none !important;}
