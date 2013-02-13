@@ -560,12 +560,10 @@ class RatableBehavior extends ModelBehavior {
 * call calculateRating  function
 * @return rating
 */
-    
-    public function afterFind(Model $Model, $results) {
-        if($results[$Model->alias]['id']!='') { 
-         $results[$Model->alias]['_rating'] = $this->calculateRating($Model,$results[$Model->alias]['id'],true,'average');
+	public function afterFind(Model $Model, $results) {
+        if(!empty($results[$Model->alias]['id'])) { 
+         	$results[$Model->alias]['_rating'] = $this->calculateRating($Model, $results[$Model->alias]['id'], true, 'average');
         }
         return $results;
-   }
-
+	}
 }
