@@ -32,6 +32,13 @@ class Rating extends RatingsAppModel {
  * @var array $validate
  */
 	public $validate = array();
+	
+/**
+ * Acts as
+ *
+ * @var string
+ */
+	public $actsAs = array('Tree');
 
 /**
  * Constructor
