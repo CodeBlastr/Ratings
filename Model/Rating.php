@@ -71,6 +71,8 @@ class Rating extends RatingsAppModel {
 				'required' => $rules['notEmpty']),
 			'value' => array(
 				'required' => $rules['notEmpty']));
+				
+		$this->ratingValues = __RATINGS_SETTINGS;
 	}
     
   

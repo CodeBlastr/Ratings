@@ -114,15 +114,16 @@ class RatableBehavior extends ModelBehavior {
  * @param numeric $value
  * @return mixed boolean or calculated sum
  */
-	public function saveRating(Model $Model, $foreignKey = null, $userId = null, $value = 0) {
+	public function saveRating(Model $Model, $foreignKey = null, $userId = null, $value = 0, $parent_id = null) {
        	$type = 'saveRating';
-		$this->beforeRateCallback($Model, compact('foreignKey', 'userId', 'value', 'update', 'type'));
+		$this->beforeRateCallback($Model, compact('foreignKey', 'userId', 'value', 'update', 'type', 'parent_id'));
 		$oldRating = $this->isRatedBy($Model, $foreignKey, $userId);
 		if (!$oldRating || $this->settings[$Model->alias]['update'] == true) {
 			$data['Rating']['foreign_key'] = $foreignKey;
 			$data['Rating']['model'] = $Model->alias;
 			$data['Rating']['user_id'] = $userId;
 			$data['Rating']['value'] = $value;
+			$data['Rating']['parent_id'] = $parent_id;
 			if ($this->settings[$Model->alias]['update'] == true) {
 				$update = true;
 				$this->oldRating = $oldRating;
@@ -158,7 +159,7 @@ class RatableBehavior extends ModelBehavior {
 				} else {
 					$result = $this->calculateRating($Model, $foreignKey, $this->settings[$Model->alias]['saveToField'], $this->settings[$Model->alias]['calculation']);
 				}
-				$this->afterRateCallback($Model, compact('foreignKey', 'userId', 'value', 'result', 'update', 'oldRating', 'type'));
+				$this->afterRateCallback($Model, compact('foreignKey', 'userId', 'value', 'result', 'update', 'oldRating', 'type', 'parent_id'));
 				return $result;
 			}
 		}
@@ -460,7 +461,8 @@ class RatableBehavior extends ModelBehavior {
  * @param array options
  * @param return boolean True on success
  */
-	public function rate(Model $Model, $foreignKey = null, $userId = null, $rating = null, $options = array()) {
+	public function rate(Model $Model, $foreignKey = null, $userId = null, $rating = null, $options = array(), $parent_id = null) {
+			
 		$options = array_merge(array(
 			'userField' => 'user_id',
 			'find' => array(
@@ -475,8 +477,13 @@ class RatableBehavior extends ModelBehavior {
 		if (!in_array($rating, array_keys($options['values']))) {
 			throw new OutOfBoundsException(__d('ratings', 'Invalid Rating'));
 		}
-
-		$record = $Model->find('first', $options['find']);
+		
+		//added Check to see if model uses a table or not
+		//Used for Feeds
+		if($Model->useTable !== false) {
+			$record = $Model->find('first', $options['find']);
+		}
+		
 
 		if (empty($record)) {
 			throw new OutOfBoundsException(__d('ratings', 'Invalid Record'));
@@ -489,7 +496,7 @@ class RatableBehavior extends ModelBehavior {
 			}
 		}
 
-		if ($Model->saveRating($foreignKey, $userId, $options['values'][$rating])) {
+		if ($Model->saveRating($foreignKey, $userId, $options['values'][$rating], $parent_id)) {
 			$Model->data = $record;
 			return true;
 		} else {
