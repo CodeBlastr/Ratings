@@ -109,49 +109,60 @@ class RatableBehavior extends ModelBehavior {
  * Saves a new rating
  *
  * @param AppModel $Model
- * @param string $foreignKey
- * @param string $userId
- * @param numeric $value
+ * @param String $foreignKey
+ * @param String $userId
+ * @param Array $options is the records
  * @return mixed boolean or calculated sum
  */
-	public function saveRating(Model $Model, $foreignKey = null, $userId = null, $value = 0, $parent_id = null) {
+	public function saveRating(Model $Model, $foreignKey, $userId, $records) {
        	$type = 'saveRating';
-		$this->beforeRateCallback($Model, compact('foreignKey', 'userId', 'value', 'update', 'type', 'parent_id'));
-		$oldRating = $this->isRatedBy($Model, $foreignKey, $userId);
-		if (!$oldRating || $this->settings[$Model->alias]['update'] == true) {
-			$data['Rating']['foreign_key'] = $foreignKey;
-			$data['Rating']['model'] = $Model->alias;
-			$data['Rating']['user_id'] = $userId;
-			$data['Rating']['value'] = $value;
-			$data['Rating']['parent_id'] = $parent_id;
-			if ($this->settings[$Model->alias]['update'] == true) {
-				$update = true;
-				$this->oldRating = $oldRating;
-				if (!empty($oldRating)) {
-					if (is_array($foreignKey)) {
-						$oldRating = $this->oldRating = $Model->Rating->find('first', array(
-							'recursive' => -1,
-							'conditions' => array(
-								'Rating.model' => $Model->alias,
-								'Rating.foreign_key' => $foreignKey,
-								'Rating.user_id' => $userId
-							)
-						));
-					}
-
-					$Model->Rating->deleteAll(array(
-						'Rating.model' => $Model->alias,
-						'Rating.foreign_key' => $foreignKey,
-						'Rating.user_id' => $userId
-					), false, false);
-				}
-			} else {
-				$oldRating = null;
-				$update = false;
-			}
-
+		//$this->beforeRateCallback($Model, compact('foreignKey', 'userId', 'options','records'));
+		// $oldRating = $this->isRatedBy($Model, $foreignKey, $userId);
+		// if (!$oldRating || $this->settings[$Model->alias]['update'] == true) {
+			// $data['Rating']['foreign_key'] = $foreignKey;
+			// $data['Rating']['model'] = $Model->alias;
+			// $data['Rating']['user_id'] = $userId;
+			// $data['Rating']['value'] = $value;
+			// if ($this->settings[$Model->alias]['update'] == true) {
+				// $update = true;
+				// $this->oldRating = $oldRating;
+				// if (!empty($oldRating)) {
+					// if (is_array($foreignKey)) {
+						// $oldRating = $this->oldRating = $Model->Rating->find('first', array(
+							// 'recursive' => -1,
+							// 'conditions' => array(
+								// 'Rating.model' => $Model->alias,
+								// 'Rating.foreign_key' => $foreignKey,
+								// 'Rating.user_id' => $userId
+							// )
+						// ));
+					// }
+// 
+					// $Model->Rating->deleteAll(array(
+						// 'Rating.model' => $Model->alias,
+						// 'Rating.foreign_key' => $foreignKey,
+						// 'Rating.user_id' => $userId
+					// ), false, false);
+				// }
+			// } else {
+				// $oldRating = null;
+				// $update = false;
+			// }
+		if(isset($records)) {
+			$data['Rating'] = $records['Rating'][0];
 			$Model->Rating->create();
 			if ($Model->Rating->save($data)) {
+				$id = $Model->Rating->id;
+				if(isset($records['SubRatings'])) {
+					$children = array();	
+					foreach($records['SubRatings'] as $subRating) {
+						$subRating['parent_id'] = $id;
+						$children[] = $subRating;
+					}
+					debug($children);
+					//break;
+					$Model->Rating->saveMany($children);
+				}
 				$fieldCounterType = $Model->getColumnType($this->settings[$Model->alias]['fieldCounter']);
 				$fieldSummaryType = $Model->getColumnType($this->settings[$Model->alias]['fieldSummary']);
 				if ($fieldCounterType && $fieldSummaryType) {
@@ -458,50 +469,57 @@ class RatableBehavior extends ModelBehavior {
  * @param string model primary key / id
  * @param mixed user id integer or string uuid
  * @param mixed integer or string rating
- * @param array options
+ * @param array options to save Rating Array($title, $review, $data)
  * @param return boolean True on success
  */
-	public function rate(Model $Model, $foreignKey = null, $userId = null, $rating = null, $options = array(), $parent_id = null) {
+	public function rate(Model $Model, $foreignKey = null, $userId = null, $rating = null, $options = array()) {
 			
-		$options = array_merge(array(
-			'userField' => 'user_id',
-			'find' => array(
-				'contain' => array(),
-				'conditions' => array(
-					$Model->alias . '.' . $Model->primaryKey => $foreignKey)),
-			'values' => array(
-				'up' => 1, 'down' => -1
-			)
-		), $options);
-
-		if (!in_array($rating, array_keys($options['values']))) {
-			throw new OutOfBoundsException(__d('ratings', 'Invalid Rating'));
-		}
-		
-		//added Check to see if model uses a table or not
-		//Used for Feeds
-		if($Model->useTable !== false) {
-			$record = $Model->find('first', $options['find']);
-		}
-		
-
-		if (empty($record)) {
-			throw new OutOfBoundsException(__d('ratings', 'Invalid Record'));
-		}
-
-		if ($options['userField'] !== false && $Model->getColumnType($options['userField'])) {
-			if ($record[$Model->alias][$options['userField']] == $userId) {
-				$Model->data = $record;
-				throw new LogicException(__d('ratings', 'You can not vote on your own records'));
+			$values = defined('__RATINGS_RATINGS_SETTINGS') ? unserialize(__RATINGS_RATINGS_SETTINGS) : array();
+			
+			if(empty($values)) {
+				throw new RuntimeException(__d('ratings', 'You need to setup ratings'));
+			}else {
+				$options['values'] = $values;
 			}
-		}
-
-		if ($Model->saveRating($foreignKey, $userId, $options['values'][$rating], $parent_id)) {
-			$Model->data = $record;
-			return true;
-		} else {
-			throw new RuntimeException(__d('ratings', 'You have already rated this record'));
-		}
+			
+			
+			$options = array_merge(array(
+				'userField' => 'user_id',
+				'find' => array(
+					'contain' => array(),
+					'conditions' => array(
+						'foreign_key' => $foreignKey)),
+			), $options);
+			
+			if (!array_key_exists ( $rating , $options['values'] )) {
+				throw new OutOfBoundsException(__d('ratings', 'Invalid Rating'));
+			}
+			
+			//Allows us to pass Models with no table by passing in a complete record
+			if(isset($options['records'])) {
+				$records = $options['records'];
+			}else{
+				$records = $Model->find('all', $options['find']);
+			}
+			
+			
+			if (empty($records)) {
+				throw new OutOfBoundsException(__d('ratings', 'Invalid Record'));
+			}
+	
+			if ($options['userField'] !== false && $Model->getColumnType($options['userField'])) {
+				if ($record[$Model->alias][$options['userField']] == $userId) {
+					$Model->data = $records;
+					throw new LogicException(__d('ratings', 'You can not vote on your own records'));
+				}
+			}
+			
+			if ($Model->saveRating($foreignKey, $userId, $records)) {
+				$Model->data = $records;
+				return true;
+			} else {
+				throw new RuntimeException(__d('ratings', 'You have already rated this record'));
+			}
 	}
 
 /**
