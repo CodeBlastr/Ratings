@@ -159,8 +159,6 @@ class RatableBehavior extends ModelBehavior {
 						$subRating['parent_id'] = $id;
 						$children[] = $subRating;
 					}
-					debug($children);
-					//break;
 					$Model->Rating->saveMany($children);
 				}
 				$fieldCounterType = $Model->getColumnType($this->settings[$Model->alias]['fieldCounter']);
