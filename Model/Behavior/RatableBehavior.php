@@ -577,6 +577,28 @@ class RatableBehavior extends ModelBehavior {
 		return $prefix . $postfix;
 	}
     
+    
+ /**
+  * Gets all the overall ratings of a user
+  * @param $uid User Id
+  * @param $value The rating value
+  * @return array an array of rated items
+  */
+    
+    public function userRatings(Model $Model, $uid, $value = false) {
+        if(!$value) {
+            $conditions = array('user_id' => $uid, 'parent_id' => null);
+        }else {
+            $conditions = array('user_id' => $uid, 'parent_id' => null, 'value' => $value);
+        }
+            
+        $results = $Model->Rating->find('all', array(
+            'conditions' => $conditions,
+        ));
+        
+        return $results;
+    }
+    
 /**
 * Return Star Average Rating
 *
