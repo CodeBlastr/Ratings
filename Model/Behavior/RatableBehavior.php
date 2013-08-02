@@ -149,9 +149,10 @@ class RatableBehavior extends ModelBehavior {
 				// $update = false;
 			// }
 		if(isset($records)) {
-			$data['Rating'] = $records['Rating'][0];
+			$data['Rating'] = !empty($records['Rating']) ? $records['Rating'][0] : array('model' => $Model->alias, 'foreign_key' => $foreignKey, 'user_id' => $userId, 'value' => $records);
 			$Model->Rating->create();
 			if ($Model->Rating->save($data)) {
+				
 				$id = $Model->Rating->id;
 				if(isset($records['SubRatings'])) {
 					$children = array();	
