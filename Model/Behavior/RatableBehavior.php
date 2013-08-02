@@ -360,24 +360,29 @@ class RatableBehavior extends ModelBehavior {
 		if (!in_array($mode, array_keys($this->modes))) {
 			throw new InvalidArgumentException(sprintf(__d('ratings', 'Invalid rating mode %s.'), $mode));
 		}
-
+		
+		$userId = CakeSession::read('Auth.User.id');
+		
 		$result = $Model->Rating->find('all', array(
 			'contain' => array($Model->alias),
 			'fields' => array(
-				$this->modes[$mode] . '(Rating.value) AS rating'),
+				$this->modes[$mode] . '(Rating.value) AS rating',
+				"IF ((SELECT COUNT(*) FROM `stage_educastic`.`ratings` AS `Rating`
+WHERE `Rating`.`foreign_key` = '$foreignKey' AND `Rating`.`model` = '$Model->alias' AND `Rating`.`user_id` = '$userId') > 0, 'true', 'false') as `user_rated`",
+				), // this field tells us whether the logged in user has already rated.  (true if yes, false if no)
 			'conditions' => array(
 				'Rating.foreign_key' => $foreignKey,
 				'Rating.model' => $Model->alias
 			)
 		));
-        
+		
 		if (empty($result[0][0]['rating'])) {
 			$result[0][0]['rating'] = 0;
 		}
 
 		$Model->newRating = $result[0][0]['rating'];
 		if (!$saveToField) {
-			return $result[0][0]['rating'];
+			return array('_rating' => $result[0][0]['rating'], '_user_rated' => $result[0][0]['user_rated']);
 		}
 
 		if (!is_string($saveToField)) {
@@ -385,8 +390,7 @@ class RatableBehavior extends ModelBehavior {
 		}
 
 		if (!$Model->hasField($saveToField)) {
-          // return $result[0][0]['rating'];
-           return $result[0]['Rating']['rating'];
+			return array('_rating' => $result[0][0]['rating'], '_user_rated' => $result[0][0]['user_rated']); // you change this put a comment why
 		}
 
 		$data = array($Model->alias => array(
@@ -607,8 +611,13 @@ class RatableBehavior extends ModelBehavior {
 * @return rating
 */
 	public function afterFind(Model $Model, $results) {
-        if(!empty($results[$Model->alias]['id'])) { 
-         	$results[$Model->alias]['_rating'] = $this->calculateRating($Model, $results[$Model->alias]['id'], true, 'average');
+		// some finds return many the results as array even if it's just one record
+		if (!empty($results[0][$Model->alias])) {
+			$results[0][$Model->alias] = array_merge($results[0][$Model->alias], $this->calculateRating($Model, $results[0][$Model->alias]['id'], true, 'average'));
+		}
+		
+		if(!empty($record[$Model->alias]['id'])) { 
+         	$results[$Model->alias] = array_merge($results[$Model->alias], $this->calculateRating($Model, $results[$Model->alias]['id'], true, 'average'));
         }
         return $results;
 	}
