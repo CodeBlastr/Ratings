@@ -1,4 +1,5 @@
 <?php
+App::uses('RatingsAppModel', 'Ratings.Model');
 /**
  * Copyright 2010, Cake Development Corporation (http://cakedc.com)
  *
