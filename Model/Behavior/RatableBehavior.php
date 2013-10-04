@@ -367,7 +367,7 @@ class RatableBehavior extends ModelBehavior {
 			'contain' => array($Model->alias),
 			'fields' => array(
 				$this->modes[$mode] . '(Rating.value) AS rating',
-				"IF ((SELECT COUNT(*) FROM `stage_educastic`.`ratings` AS `Rating`
+				"IF ((SELECT COUNT(*) FROM `ratings` AS `Rating`
 WHERE `Rating`.`foreign_key` = '$foreignKey' AND `Rating`.`model` = '$Model->alias' AND `Rating`.`user_id` = '$userId') > 0, 'true', 'false') as `user_rated`",
 				), // this field tells us whether the logged in user has already rated.  (true if yes, false if no)
 			'conditions' => array(
