@@ -56,7 +56,6 @@ class RatingHelper extends AppHelper {
  * @param array $urlHtmlAttributes Attributes for the rating links inside the list
  * @return string markup that displays the rating options
  */
-
 	public function display($options = array(), $urlHtmlAttributes = array()) {
      	$options = array_merge($this->defaults, $options);
 		if (empty($options['item'])) {
