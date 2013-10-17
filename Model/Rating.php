@@ -19,6 +19,13 @@ App::uses('RatingsAppModel', 'Ratings.Model');
  * @subpackage 	ratings.models
  */
 class Rating extends RatingsAppModel {
+	
+/**
+ * Acts as
+ *
+ * @var string
+ */
+	public $actsAs = array('Tree');
 
 /**
  * Name
@@ -31,15 +38,52 @@ class Rating extends RatingsAppModel {
  * Validation rules
  *
  * @var array $validate
+ */	
+	public $validate = array(
+		'user_id' => array(
+			'rule' => 'notempty',
+			'message' => 'Must be logged in to rate.'
+			),
+		'model' => array(
+			'rule' => 'notempty',
+			'message' => 'Failed to relate this rating to an object.'
+			),
+		'foreign_key' => array(
+			'rule' => 'notempty',
+			'message' => 'Failed to relate this rating to a record.'
+			),
+		'value' => array(
+			'rule' => 'notempty',
+			'message' => 'No rating value was provided.'
+			),
+        );
+
+/**
+ * belongsTo associations
+ *
+ * @var array $belongsTo
  */
-	public $validate = array();
+	public $belongsTo = array(
+		'User' => array(
+			'className' => 'Users.User',
+			'foreignKey' => 'user_id',
+			'conditions' => '',
+			'fields' => '',
+			'order' => ''
+			),
+		);
 	
 /**
- * Acts as
+ * hasMany associations
  *
- * @var string
+ * @var array $hasMany
  */
-	public $actsAs = array('Tree');
+	public $hasMany = array(
+		'ChildRating' => array(
+			'className' => 'Ratings.Rating',
+			'foreignKey' => 'parent_id',
+			),
+		);
 
 /**
  * Constructor
@@ -49,33 +93,93 @@ class Rating extends RatingsAppModel {
  * @return void
  */
 	public function __construct($id = false, $table = null, $ds = null) {
-		$userClass = Configure::read('App.UserClass');
-		if (empty($userClass)) {
-			$userClass = 'User';
-		}
-
-		$this->belongsTo['User'] = array(
-			'className' => $userClass,
-			'foreignKey' => 'user_id');
 		parent::__construct($id, $table, $ds);
-		$rules = array(
-			'notEmpty' => array(
-				'required' => true,
-				'rule' => 'notEmpty'));
-
-		$this->validate = array(
-			'user_id' => array(
-				'required' => $rules['notEmpty']),
-			'model' => array(
-				'required' => $rules['notEmpty']),
-			'foreign_key' => array(
-				'required' => $rules['notEmpty']),
-			'value' => array(
-				'required' => $rules['notEmpty']));
-				
-		$this->ratingValues = __RATINGS_SETTINGS;
+		$this->ratingValues = __RATINGS_SETTINGS; // deprecated, will be removed
 	}
-    
-  
+	
+/**
+ * Save method
+ * 
+ * Have to overwrite so that the tree behavior gets the parent_id  (beforeSave() gets fired after behaviors)
+ */
+	public function saveAll(array $data = null, array $options = array()) {
+		$data = $this->cleanData($data);
+		return parent::saveAll($data, $options);
+	}
+	
+/**
+ * After save method
+ * 
+ */
+	public function afterSave($created, array $options = array()) {
+		$this->calculateRating();
+	}
+	
+/**
+ * Calculate Rating method
+ * Finds a given id, and it's children and averages out the ratings for the parent.
+ * And updates the rating count.
+ * 
+ * @param uuid
+ */
+ 	public function calculateRating($parentId = null) {
+ 		$id = $this->id; // saving you for later
+ 		if(!empty($this->data['Rating']['parent_id']) || !empty($parentId)) {
+	 		$parentId = !empty($parentId) ? $parentId : $this->data['Rating']['parent_id'];
+			$ratings = $this->find('first', array('conditions' => array('Rating.id' => $parentId), 'contain' => array('ChildRating')));
+			if (!empty($ratings['ChildRating'])) {
+				$values = Set::extract('/value', $ratings['ChildRating']);
+				$count = count($values);
+				$value = $this->average($values);
+				
+				$data['Rating'] = array(
+					'id' => $parentId,
+					'value' => $value,
+					'count' => $count,
+					'test' => 'stop'
+					);
+				// save the given parent with no callbacks
+				$this->create();
+				if ($this->saveAll($data, array('callbacks' => false))) {
+					// nothing... this is aftersave
+				} else {
+					throw new Exception(__('Could not calculate rating value'));
+				}
+			}
+ 		}
+		$this->id = $id;
+ 	}
+
+/**
+ * Average method
+ * Takes an array of values and returns the average of those values
+ * 
+ */
+ 	public function average($values) {
+ 		return array_sum($values) / count($values);
+ 	}
+	
+/**
+ * Clean data method
+ */
+ 	public function cleanData($data) {
+		// see if there is a parent, if so add it to the data
+  		if(empty($data['Rating']['parent_id']) && !empty($data['Rating']['model']) && !empty($data['Rating']['foreign_key'])) {
+  			$parentId = $this->field('Rating.id', array('Rating.parent_id' => null, 'Rating.model' => $data['Rating']['model'], 'Rating.foreign_key' => $data['Rating']['foreign_key']));
+			if (!empty($parentId)) {
+				$data['Rating']['id'] = null;
+				$data['Rating']['parent_id'] = $parentId;
+			}
+		} 
+		// add a child so that the parent calculations turn out right
+		if (empty($parentId) && empty($data['ChildRating']) && !empty($data['Rating']['user_id']) && !empty($data['Rating']['model']) && !empty($data['Rating']['foreign_key']) && !empty($data['Rating']['value'])) {
+			$data['ChildRating'][0]['user_id'] = $data['Rating']['user_id'];
+			$data['ChildRating'][0]['model'] = $data['Rating']['model'];
+			$data['ChildRating'][0]['foreign_key'] = $data['Rating']['foreign_key'];
+			$data['ChildRating'][0]['value'] = $data['Rating']['value'];
+		}
+		
+		return $data;
+ 	}
 
 }

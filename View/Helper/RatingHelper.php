@@ -40,14 +40,27 @@ class RatingHelper extends AppHelper {
  */
 	public $defaults = array(
 		'stars' => 5,
-		'item' => null,
+		'foreignKey' => null,
 		'value' => 0,
-		'type' => 'ul',
+		'type' => 'radio',
 		'createForm' => false,
 		'url' => array(),
 		'link' => true,
 		'redirect' => true,
-		'class' => 'rating');
+		'class' => 'rating'
+	);
+	
+/**
+ * Constructor method
+ * 
+ */
+    public function __construct(View $View, $settings = array()) {
+    	$this->View = $View;
+    	$this->defaults = array_merge($this->defaults, $settings);
+		parent::__construct($View, $settings);
+    }
+
+
 
 /**
  * Displays a bunch of rating links wrapped into a list element of your choice
@@ -58,7 +71,7 @@ class RatingHelper extends AppHelper {
  */
 	public function display($options = array(), $urlHtmlAttributes = array()) {
      	$options = array_merge($this->defaults, $options);
-		if (empty($options['item'])) {
+		if (empty($options['foreignKey'])) {
 			throw new Exception(__d('ratings', 'You must set the id of the item you want to rate.'), E_USER_NOTICE);
 		}
 
@@ -70,7 +83,7 @@ class RatingHelper extends AppHelper {
 		for ($i = 1; $i <= $options['stars']; $i++) {
 			$link = null;
 			if ($options['link'] == true) {
-				$url = array_merge($options['url'], array('rate' => $options['item'], 'rating' => $i));
+				$url = array_merge($options['url'], array('rate' => $options['foreignKey'], 'rating' => $i));
 				if ($options['redirect']) {
 					$url['redirect'] = 1;
 				}
@@ -88,6 +101,44 @@ class RatingHelper extends AppHelper {
 		$stars = $this->Html->tag($type, $stars, array('class' => $options['class'] . ' ' . 'rating-' . round($options['value'], 0)));
 		return $stars;
 	}
+
+/**
+ * Handle data method
+ * 
+ * Might be a break from the MVC pattern but the benefits seem too high.
+ * 1. Being able to just do $this->element('ratable', array('model' => 'MyModel', 'foreignKey' => $someForeignKey))
+ * 2. We don't need to load a bunch of components and helpers and worry about whether it is need for multi-sites
+ * 3. Commence beating me :) 
+ */
+ 	public function handleData($options = array()) {
+     	$options = array_merge($this->defaults, $options);
+		
+		$default['Rating']['model'] = $options['model'];
+		$default['Rating']['foreign_key'] = $options['foreignKey'];
+		$default['Rating']['value'] = 0;
+		$default['Rating']['user_id'] = CakeSession::read('Auth.User.id');
+		
+		App::uses('Rating', 'Ratings.Model');
+		$Rating = new Rating;
+		
+		if ($this->request->is('post')) {
+			// save the rating
+			$this->request->data = Set::merge($default, $this->request->data);
+			if ($Rating->saveAll($this->request->data)) {
+				// do nothing (maybe we'll add a redirect option some day)
+			} else {
+				$default['Rating']['result'] =  __('Rating failed to save. %s', $Rating->validate[key($Rating->invalidFields())]['message']);
+			}
+		}
+		$data = $Rating->find('first', array(
+			'conditions' => array(
+				'Rating.model' => $options['model'],
+				'Rating.foreign_key' => $options['foreignKey'],
+				'Rating.parent_id' => null
+				)
+			));
+		return Set::merge($default, $data);
+ 	}
 
 /**
  * Bar rating
@@ -150,14 +201,14 @@ class RatingHelper extends AppHelper {
 	public function starForm($options = array(), $urlHtmlAttributes = array()) {
 		$options = array_merge($this->defaults, $options);
 		$flush = false;
-		if (empty($options['item'])) {
+		if (empty($options['foreignKey'])) {
 			trigger_error(__d('ratings', 'You must set the id of the item you want to rate.'), E_USER_NOTICE);
 		}
 		$result = '';
 		if ($options['createForm']) {
-			$result .= $this->Form->create($options['createForm']) . "\n";
+			$result .= $this->Form->create('Rating', $options['createForm']) . "\n";
 		}
-		$inputField = 'rating';
+		$inputField = 'value';
 		if (!empty($options['inputField'])) {
 			$inputField = $options['inputField'];
 		}
@@ -165,6 +216,7 @@ class RatingHelper extends AppHelper {
 			'type' => 'radio',
 			'legend' => false,
 			'value' => isset($options['value']) ? round($options['value']) : 0,
+			'class' => 'star',
 			'options' => array_combine(range(1, $options['stars']), range(1, $options['stars']))));
 		if ($options['createForm']) {
 			if (!empty($options['target']) && !empty($options['createForm']['url']) && !empty($options['createForm']['ajaxOptions'])) {

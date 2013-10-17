@@ -7,6 +7,7 @@
  *
  * @copyright Copyright 2010, Cake Development Corporation (http://cakedc.com)
  * @license MIT License (http://www.opensource.org/licenses/mit-license.php)
+ * @todo This is a deprecated behavior that should not be used anymore.
  */
 
 /**
