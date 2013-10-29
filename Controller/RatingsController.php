@@ -29,4 +29,21 @@ class RatingsController extends RatingsAppController {
 		debug($this->Rating->find('all', array('order' => 'rating', 'limit' => 20, 'fields' => array('avg(Rating.value) AS rating', $modelName. '.name'), 'contain' => $modelName)));
 		break;
 	}
+
+/**
+ * Find the ratings for a Ratee given by a Rator
+ * 
+ * 
+ */	
+	public function user($userId){
+		//two variables ratee and rator 
+		//$rator = find ratings where userid = userid **Rator**
+		//$ratee = find ratings where ratign id = forgein key aka seller_id **Ratee**
+		//$this->set($ratee)
+		//$this->set($rator)
+		
+		//$ratee= $this->Rating->find('first', array('conditions' => array('Rating.title' => $data['Rating']['title']))); //find all records for Rating
+		
+		
+	}
 }
