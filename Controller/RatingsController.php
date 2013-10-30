@@ -32,18 +32,24 @@ class RatingsController extends RatingsAppController {
 
 /**
  * Find the ratings for a Ratee given by a Rator
- * 
+ * @param $userId
  * 
  */	
 	public function user($userId){
 		//two variables ratee and rator 
 		//$rator = find ratings where userid = userid **Rator**
 		//$ratee = find ratings where ratign id = forgein key aka seller_id **Ratee**
-		//$this->set($ratee)
-		//$this->set($rator)
+		//$ratee= $this->Rating->find('all', array('conditions' => array('Rating.title' => $data['Rating']['title']))); //find all records for Rating
+		//$this->set('ratee', $ratee = $this->User->read());
+		//$this->set('rator', $rator = $this->User->read());
+
+
+		$rator = $this->Rating->find('all', array('conditions' => array('Rating.foriegn_key' => $this->userId)));
+		$ratee = $this->Rating->find('all', array('consitions' => array('Rating.foriegn_key' => $this->userId)));
 		
-		//$ratee= $this->Rating->find('first', array('conditions' => array('Rating.title' => $data['Rating']['title']))); //find all records for Rating
+		$this->set('ratee', $ratee = $this->User->read());
+		$this->set('rator', $rator = $this->User->read());
 		
-		
+
 	}
 }
