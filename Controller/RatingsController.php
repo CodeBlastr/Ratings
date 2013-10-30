@@ -36,20 +36,16 @@ class RatingsController extends RatingsAppController {
  * 
  */	
 	public function user($userId){
-		//two variables ratee and rator 
+		//Two variables ratee and rator 
 		//$rator = find ratings where userid = userid **Rator**
 		//$ratee = find ratings where ratign id = forgein key aka seller_id **Ratee**
-		//$ratee= $this->Rating->find('all', array('conditions' => array('Rating.title' => $data['Rating']['title']))); //find all records for Rating
-		//$this->set('ratee', $ratee = $this->User->read());
-		//$this->set('rator', $rator = $this->User->read());
-
-
-		$rator = $this->Rating->find('all', array('conditions' => array('Rating.foriegn_key' => $this->userId)));
-		$ratee = $this->Rating->find('all', array('consitions' => array('Rating.foriegn_key' => $this->userId)));
+		$rator = $this->Rating->find('all', array('conditions' => array('Rating.foreign_key' => $userId, 'Rating.model' => 'User')));
+		$ratee = $this->Rating->find('all', array('consitions' => array('Rating.user_id' => $userId)));
+		//debug($rator);break;
+		$this->set('ratee', $ratee); //Set function() set the variable $ratee
+		$this->set('rator', $rator);//Set function() set the varibale $rator
+		//debug($this->set('rator', $rator));break;
 		
-		$this->set('ratee', $ratee = $this->User->read());
-		$this->set('rator', $rator = $this->User->read());
-		
-
+	
 	}
 }
