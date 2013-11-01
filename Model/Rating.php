@@ -94,7 +94,6 @@ class Rating extends RatingsAppModel {
  */
 	public function __construct($id = false, $table = null, $ds = null) {
 		parent::__construct($id, $table, $ds);
-		$this->ratingValues = __RATINGS_SETTINGS; // deprecated, will be removed
 	}
 	
 /**
@@ -102,7 +101,7 @@ class Rating extends RatingsAppModel {
  * 
  * Have to overwrite so that the tree behavior gets the parent_id  (beforeSave() gets fired after behaviors)
  */
-	public function saveAll(array $data = null, array $options = array()) {
+	public function saveAll($data = array(), $options = array()) {
 		$data = $this->cleanData($data);
 		return parent::saveAll($data, $options);
 	}
@@ -111,7 +110,7 @@ class Rating extends RatingsAppModel {
  * After save method
  * 
  */
-	public function afterSave($created, array $options = array()) {
+	public function afterSave($created, $options = array()) {
 		$this->calculateRating();
 	}
 	

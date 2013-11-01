@@ -611,20 +611,16 @@ WHERE `Rating`.`foreign_key` = '$foreignKey' AND `Rating`.`model` = '$Model->ali
 * call calculateRating  function
 * @return rating
 */
-	public function afterFind(Model $Model, $results) {
+	public function afterFind(Model $Model, $results, $primary = false) {
 		// some finds return many the results as array even if it's just one record
 		if (!empty($results[0][$Model->alias])) {
 			for ($i = 0; $i < count($results); $i++) {
 				$results[$i][$Model->alias] = array_merge($results[$i][$Model->alias], $this->calculateRating($Model, $results[$i][$Model->alias]['id'], true, 'average'));
 			}
 		}
-		
 		if(!empty($record[$Model->alias]['id'])) { 
          	$results[$Model->alias] = array_merge($results[$Model->alias], $this->calculateRating($Model, $results[$Model->alias]['id'], true, 'average'));
         }
-		
-        return $results;
-		
-		
+        return $results;		
 	}
 }
