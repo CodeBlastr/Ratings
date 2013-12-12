@@ -19,14 +19,16 @@ if (!empty($model) && !empty($foreignKey)) {
 	
 	$RatingHelper = $this->Helpers->load('Ratings.Rating', $___dataForView);
 	
-	echo $this->Html->css('Ratings.jquery.rating');
-	echo $this->Html->script('Ratings.jquery.rating.pack');
-	$data = $RatingHelper->handleData();  // we do this instead of in the helper, so that this element is more customizable
+	echo $this->Html->css('Ratings.jquery.rating', null, array('inline'=>false));
+	echo $this->Html->script('Ratings.jquery.rating.pack', array('inline'=>false));
+	$data = $RatingHelper->handleData(array('model' => $model, 'foreignKey' => $foreignKey));  // we do this instead of in the helper, so that this element is more customizable
 	echo !empty($data['Rating']['result']) ? $data['Rating']['result'] : null;
+	echo  '<div class="stars">';
 	echo $RatingHelper->display(array(
-	    'item' => $data['Rating']['foreign_key'],
+	    'foreignKey' => $data['Rating']['foreign_key'],
 	    'value' =>  $data['Rating']['value']
 	    ));
+	echo '</div>';
 } else {
 	echo __('model & foreignKey required for ratings');
 }
