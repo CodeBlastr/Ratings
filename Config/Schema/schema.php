@@ -1,4 +1,5 @@
 <?php
+
 /**
  * CakePHP Ratings
  *
@@ -21,7 +22,6 @@
  * @package		ratings
  * @subpackage	config.schema
  */
-
 class RatingsSchema extends CakeSchema {
 
 /**
@@ -49,6 +49,7 @@ class RatingsSchema extends CakeSchema {
  * @access public
  */
 	public function after($event = array()) {
+		
 	}
 
 /**
@@ -78,5 +79,5 @@ class RatingsSchema extends CakeSchema {
 			'UNIQUE_RATING' => array('column' => array('user_id', 'foreign_key', 'model'), 'unique' => 0)
 		)
 	);
+
 }
-?>
