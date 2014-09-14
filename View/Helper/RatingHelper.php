@@ -49,10 +49,10 @@ class RatingHelper extends AppHelper {
 		'redirect' => true,
 		'class' => 'rating'
 	);
-	
+
 /**
  * Constructor method
- * 
+ *
  */
     public function __construct(View $View, $settings = array()) {
     	$this->View = $View;
@@ -78,7 +78,7 @@ class RatingHelper extends AppHelper {
 		if ($options['type'] == 'radio') {
 			return $this->starForm($options, $urlHtmlAttributes);
 		}
-  
+
 		$stars = null;
 		for ($i = 1; $i <= $options['stars']; $i++) {
 			$link = null;
@@ -97,30 +97,30 @@ class RatingHelper extends AppHelper {
 		} else {
 			$type = 'ul';
 		}
-     
+
 		$stars = $this->Html->tag($type, $stars, array('class' => $options['class'] . ' ' . 'rating-' . round($options['value'], 0)));
 		return $stars;
 	}
 
 /**
  * Handle data method
- * 
+ *
  * Might be a break from the MVC pattern but the benefits seem too high.
  * 1. Being able to just do $this->element('ratable', array('model' => 'MyModel', 'foreignKey' => $someForeignKey))
  * 2. We don't need to load a bunch of components and helpers and worry about whether it is need for multi-sites
- * 3. Commence beating me :) 
+ * 3. Commence beating me :)
  */
  	public function handleData($options = array()) {
      	$options = array_merge($this->defaults, $options);
-		
+
 		$default['Rating']['model'] = $options['model'];
 		$default['Rating']['foreign_key'] = $options['foreignKey'];
 		$default['Rating']['value'] = 0;
 		$default['Rating']['user_id'] = CakeSession::read('Auth.User.id');
-		
+
 		App::uses('Rating', 'Ratings.Model');
 		$Rating = new Rating;
-		
+
 		if ($this->request->is('post')) {
 			// save the rating
 			$this->request->data = Set::merge($default, $this->request->data);
@@ -232,4 +232,86 @@ class RatingHelper extends AppHelper {
 		}
 		return $result;
 	}
+
+/**
+ * Given a $modelName & $foreignKey, will return find('threaded')
+ *
+ * @param string $modelName
+ * @param char $foreignKey
+ * @return array
+ */
+	public function getRatings($modelName, $foreignKey) {
+		$contain = array('User');
+		App::uses('Rating', 'Ratings.Model');
+		$Rating = new Rating;
+
+		if (CakePlugin::loaded('Comments')) { /** @todo This really needs to be "if Ratings are Commentable" **/
+			$contain[] = 'Comment';
+			$Rating->bindModel(array('hasMany' => array(
+			'Comment' => array(
+				'className' => 'Comment',
+				'foreignKey' => 'foreign_key',
+				'unique' => true,
+				'conditions' => '',
+				'fields' => '',
+				'dependent' => true,
+				'order' => '',
+				'limit' => '',
+				'offset' => '',
+				'exclusive' => '',
+				'finderQuery' => '',
+				'counterQuery' => ''))), false);
+		}
+
+		return $Rating->find('threaded', array(
+			'conditions' => array(
+				'Rating.model' => $modelName,
+				'Rating.foreign_key' => $foreignKey
+			),
+			'contain' => $contain
+		));
+	}
+
+/**
+ * $options	array
+ *			['days'] Number of days ago to limit results to
+ *			['limit'] Number of results to limit by
+ *
+ * @param string $modelName
+ * @param array $options (see above)
+ * @return array
+ */
+	public function highestRated($modelName, $options = array()) {
+		App::uses('Rating', 'Ratings.Model');
+		$Rating = new Rating;
+		return $Rating->find('threaded', array(
+			'conditions' => array(
+				'Rating.model' => $modelName,
+				'Rating.created >' => date('Y-m-d H:i:s', strtotime("{$options['days']} days ago")),
+				'Rating.parent_id' => null
+			),
+			'order' => array('Rating.value DESC'),
+			'limit' => $options['limit'],
+			'fields' => array("DISTINCT Rating.foreign_key, Rating.*, $modelName.*"),
+			'contain' => '_auto'
+		));
+	}
+
+	public function mostRated($modelName, $options = array('days' => 7, 'limit' => 3)) {
+		App::uses('Rating', 'Ratings.Model');
+		$Rating = new Rating;
+		return $Rating->find('threaded', array(
+			'conditions' => array(
+				'Rating.model' => $modelName,
+				'Rating.created >' => date('Y-m-d H:i:s', strtotime("{$options['days']} days ago")),
+				'Rating.parent_id' => null
+			),
+			'fields' => array("DISTINCT Rating.foreign_key, $modelName.*,  COUNT(*) AS occurrences "),
+			'order' => array('occurrences DESC'),
+			'group' => array('Rating.foreign_key'),
+			'limit' => $options['limit'],
+			'contain' => '_auto'
+		));
+	}
+
 }

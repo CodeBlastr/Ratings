@@ -18,8 +18,8 @@ App::uses('RatingsAppModel', 'Ratings.Model');
  * @package 	ratings
  * @subpackage 	ratings.models
  */
-class Rating extends RatingsAppModel {
-	
+class AppRating extends RatingsAppModel {
+
 /**
  * Acts as
  *
@@ -38,7 +38,7 @@ class Rating extends RatingsAppModel {
  * Validation rules
  *
  * @var array $validate
- */	
+ */
 	public $validate = array(
 		'user_id' => array(
 			'rule' => 'notempty',
@@ -72,7 +72,7 @@ class Rating extends RatingsAppModel {
 			'order' => ''
 			),
 		);
-	
+
 /**
  * hasMany associations
  *
@@ -95,30 +95,30 @@ class Rating extends RatingsAppModel {
 	public function __construct($id = false, $table = null, $ds = null) {
 		parent::__construct($id, $table, $ds);
 	}
-	
+
 /**
  * Save method
- * 
+ *
  * Have to overwrite so that the tree behavior gets the parent_id  (beforeSave() gets fired after behaviors)
  */
 	public function saveAll($data = array(), $options = array()) {
 		$data = $this->cleanData($data);
 		return parent::saveAll($data, $options);
 	}
-	
+
 /**
  * After save method
- * 
+ *
  */
 	public function afterSave($created, $options = array()) {
 		$this->calculateRating();
 	}
-	
+
 /**
  * Calculate Rating method
  * Finds a given id, and it's children and averages out the ratings for the parent.
  * And updates the rating count.
- * 
+ *
  * @param uuid
  */
  	public function calculateRating($parentId = null) {
@@ -130,7 +130,7 @@ class Rating extends RatingsAppModel {
 				$values = Set::extract('/value', $ratings['ChildRating']);
 				$count = count($values);
 				$value = $this->average($values);
-				
+
 				$data['Rating'] = array(
 					'id' => $parentId,
 					'value' => $value,
@@ -152,12 +152,12 @@ class Rating extends RatingsAppModel {
 /**
  * Average method
  * Takes an array of values and returns the average of those values
- * 
+ *
  */
  	public function average($values) {
  		return array_sum($values) / count($values);
  	}
-	
+
 /**
  * Clean data method
  */
@@ -169,7 +169,7 @@ class Rating extends RatingsAppModel {
 				$data['Rating']['id'] = null;
 				$data['Rating']['parent_id'] = $parentId;
 			}
-		} 
+		}
 		// add a child so that the parent calculations turn out right
 		if (empty($parentId) && empty($data['ChildRating']) && !empty($data['Rating']['user_id']) && !empty($data['Rating']['model']) && !empty($data['Rating']['foreign_key']) && !empty($data['Rating']['value'])) {
 			$data['ChildRating'][0]['user_id'] = $data['Rating']['user_id'];
@@ -177,8 +177,49 @@ class Rating extends RatingsAppModel {
 			$data['ChildRating'][0]['foreign_key'] = $data['Rating']['foreign_key'];
 			$data['ChildRating'][0]['value'] = $data['Rating']['value'];
 		}
-		
+
 		return $data;
  	}
 
+	public function find($type = 'first', $params = array()) {
+		if (!empty($params['contain'])) {
+			if($params['contain'] === '_auto' || array_search('_auto', $params['contain']) !== false) {
+				if(is_string($params['contain'])) {
+					$params['contain'] = array($params['contain']);
+				}
+				//Passes params to autobind.
+				$params = $this->_autoBind($params);
+			}
+		}
+		return parent::find($type, $params);
+	}
+	/**
+	 * This is another version of autobind. This is more of an all or nothing approach
+	 * this does add another query and could cause some memory and performance issues
+	 * params can be passed in the contain array
+	 *
+	 * @param $params = find $params
+	 * @return $params
+	 */
+	protected function _autoBind($params) {
+		$associations = $this->find('all', array(
+				'fields' => array('DISTINCT model'),
+		));
+		if($associations) {
+			$associations = Hash::extract($associations, '{n}.{s}.model');
+			foreach ($associations as $association) {
+				$this->bindModel(array('belongsTo' => array($association => array('foreignKey' => 'foreign_key'))));
+				if(!isset($params['contain'][$association])) {
+					$params['contain'][] = $association;
+				}
+			}
+		}
+		unset($params['contain'][array_search('_auto', $params['contain'])]);
+		return $params;
+	}
+
+}
+
+if (!isset($refuseInit)) {
+	class Rating extends AppRating {}
 }
