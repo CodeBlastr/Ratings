@@ -618,9 +618,9 @@ WHERE `Rating`.`foreign_key` = '$foreignKey' AND `Rating`.`model` = '$Model->ali
 				$results[$i][$Model->alias] = array_merge($results[$i][$Model->alias], $this->calculateRating($Model, $results[$i][$Model->alias]['id'], true, 'average'));
 			}
 		}
-		if(!empty($record[$Model->alias]['id'])) { 
+		if(!empty($results[$Model->alias]['id'])) {
          	$results[$Model->alias] = array_merge($results[$Model->alias], $this->calculateRating($Model, $results[$Model->alias]['id'], true, 'average'));
         }
-        return $results;		
+        return $results;
 	}
 }
