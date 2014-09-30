@@ -82,7 +82,8 @@ class AppRating extends RatingsAppModel {
 		'ChildRating' => array(
 			'className' => 'Ratings.Rating',
 			'foreignKey' => 'parent_id',
-			),
+			'dependent' => true
+			)
 		);
 
 /**

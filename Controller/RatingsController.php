@@ -1,7 +1,7 @@
 <?php
 App::uses('RatingsAppController', 'Ratings.Controller');
 
-class RatingsController extends RatingsAppController {
+class AppRatingsController extends RatingsAppController {
 	
 	public $allowedActions = array('rated');
 	
@@ -27,7 +27,7 @@ class RatingsController extends RatingsAppController {
         	));
 			// not worth working this way... look at the @todo above
 		debug($this->Rating->find('all', array('order' => 'rating', 'limit' => 20, 'fields' => array('avg(Rating.value) AS rating', $modelName. '.name'), 'contain' => $modelName)));
-		break;
+		exit;
 	}
 
 /**
@@ -45,7 +45,31 @@ class RatingsController extends RatingsAppController {
 		$this->set('ratee', $ratee); //Set function() set the variable $ratee
 		$this->set('rator', $rator);//Set function() set the varibale $rator
 		//debug($this->set('rator', $rator));break;
-		
+	}
 	
+/**
+ * 
+ * @param type $id
+ * @return type
+ * @throws NotFoundException
+ */
+	public function delete($id = null) {
+		$this->Rating->id = $id;
+		if (!$this->Rating->exists()) {
+			throw new NotFoundException(__('Invalid rating'));
+		}
+		$this->request->onlyAllow('post', 'delete');
+		if ($this->Rating->delete()) {
+			$this->Session->setFlash(__('The rating has been deleted.'), 'flash_success');
+		} else {
+			$this->Session->setFlash(__('The rating could not be deleted. Please, try again.'), 'flash_warning');
+		}
+		return $this->redirect($this->referer());
+	}
+	
+}
+
+if (!isset($refuseInit)) {
+	class RatingsController extends AppRatingsController {
 	}
 }
