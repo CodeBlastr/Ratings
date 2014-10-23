@@ -203,11 +203,15 @@ class AppRating extends RatingsAppModel {
 	 * @return $params
 	 */
 	protected function _autoBind($params) {
-		$associations = $this->find('all', array(
+		$associations = array();
+		$dbAssociations = $this->find('all', array(
 				'fields' => array('DISTINCT model'),
 		));
-		if($associations) {
-			$associations = Hash::extract($associations, '{n}.{s}.model');
+		if ($dbAssociations) {
+			$associations = Hash::extract($dbAssociations, '{n}.{s}.model');
+		}
+		$associations = Hash::merge($associations, array($params['conditions']['Rating.model']));
+		if ($associations) {
 			foreach ($associations as $association) {
 				$this->bindModel(array('belongsTo' => array($association => array('foreignKey' => 'foreign_key'))));
 				if(!isset($params['contain'][$association])) {
@@ -216,6 +220,7 @@ class AppRating extends RatingsAppModel {
 			}
 		}
 		unset($params['contain'][array_search('_auto', $params['contain'])]);
+		
 		return $params;
 	}
 
