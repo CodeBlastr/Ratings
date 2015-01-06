@@ -281,7 +281,7 @@ class RatingHelper extends AppHelper {
  * @param array $options (see above)
  * @return array
  */
-	public function highestRated($modelName, $options = array()) {
+	public function highestRated($modelName, $options = array('days' => 7, 'limit' => 3, 'contain' => array())) {
 		App::uses('Rating', 'Ratings.Model');
 		$Rating = new Rating;
 		return $Rating->find('threaded', array(
@@ -293,11 +293,16 @@ class RatingHelper extends AppHelper {
 			'order' => array('Rating.value DESC'),
 			'limit' => $options['limit'],
 			'fields' => array("DISTINCT Rating.foreign_key, Rating.*, $modelName.*"),
-			'contain' => '_auto'
+			'contain' => Hash::merge($options['contain'], array('_auto'))
 		));
 	}
 
-	public function mostRated($modelName, $options = array('days' => 7, 'limit' => 3)) {
+/**
+ * @param string $modelName
+ * @param array $options
+ * @return array
+ */
+	public function mostRated($modelName, $options = array('days' => 7, 'limit' => 3, 'contain' => array())) {
 		App::uses('Rating', 'Ratings.Model');
 		$Rating = new Rating;
 		return $Rating->find('threaded', array(
@@ -310,7 +315,7 @@ class RatingHelper extends AppHelper {
 			'order' => array('occurrences DESC'),
 			'group' => array('Rating.foreign_key'),
 			'limit' => $options['limit'],
-			'contain' => '_auto'
+			'contain' => Hash::merge($options['contain'], array('_auto'))
 		));
 	}
 
