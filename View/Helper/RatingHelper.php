@@ -305,7 +305,7 @@ class RatingHelper extends AppHelper {
 	public function mostRated($modelName, $options = array('days' => 7, 'limit' => 3, 'contain' => array())) {
 		App::uses('Rating', 'Ratings.Model');
 		$Rating = new Rating;
-		return $Rating->find('threaded', array(
+		return $Rating->find('all', array(
 			'conditions' => array(
 				'Rating.model' => $modelName,
 				'Rating.created >' => date('Y-m-d H:i:s', strtotime("{$options['days']} days ago")),
