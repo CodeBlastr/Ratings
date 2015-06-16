@@ -96,6 +96,24 @@ class AppRating extends RatingsAppModel {
 	public function __construct($id = false, $table = null, $ds = null) {
 		parent::__construct($id, $table, $ds);
 	}
+	
+/**
+ * beforeSave callback
+ * 
+ * @todo allow options for whether the user should update their rating, not be able to rate twice, or provide multiple ratings
+ * right now it defaults to not letting the user rate more than once
+ * @todo probably should move this to a validation call? 
+ */
+ 	public function beforeSave($options = array()) {
+		if (empty($this->data['Rating']['id']) && !empty($this->data['Rating']['user_id']) && !empty($this->data['Rating']['model']) && !empty($this->data['Rating']['foreign_key'])) {
+			$id = $this->field('Rating.id', array('Rating.user_id' => $this->data['Rating']['user_id'], 'Rating.model' => $this->data['Rating']['model'], 'Rating.foreign_key' => $this->data['Rating']['foreign_key']));
+			if (!empty($id)) {
+				$this->validationErrors[] = 'User has already rated this item.';
+				return false;
+			}
+		}
+		return parent::beforeSave($options);
+	}
 
 /**
  * Save method
@@ -161,6 +179,7 @@ class AppRating extends RatingsAppModel {
 
 /**
  * Clean data method
+ * 
  */
  	public function cleanData($data) {
 		// see if there is a parent, if so add it to the data
@@ -178,7 +197,6 @@ class AppRating extends RatingsAppModel {
 			$data['ChildRating'][0]['foreign_key'] = $data['Rating']['foreign_key'];
 			$data['ChildRating'][0]['value'] = $data['Rating']['value'];
 		}
-
 		return $data;
  	}
 

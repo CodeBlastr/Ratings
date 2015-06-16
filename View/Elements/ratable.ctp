@@ -18,9 +18,8 @@ if (!empty($model) && !empty($foreignKey)) {
 	$___dataForView['createForm']['id'] = !empty($createForm['id']) ? $createForm['id'] : __('rate%s%s', $model, $foreignKey);
 	
 	$RatingHelper = $this->Helpers->load('Ratings.Rating', $___dataForView);
-	
-	echo $this->Html->css('Ratings.jquery.rating', null, array('inline'=>false));
-	echo $this->Html->script('Ratings.jquery.rating.pack', array('inline'=>false));
+	echo $this->Html->css('Ratings.jquery.rating');
+	echo $this->Html->script('Ratings.jquery.rating.pack');
 	$data = $RatingHelper->handleData(array('model' => $model, 'foreignKey' => $foreignKey));  // we do this instead of in the helper, so that this element is more customizable
 	echo !empty($data['Rating']['result']) ? $data['Rating']['result'] : null;
 	echo  '<div class="stars">';
