@@ -47,7 +47,8 @@ class RatingHelper extends AppHelper {
 		'url' => array(),
 		'link' => true,
 		'redirect' => true,
-		'class' => 'rating'
+		'class' => 'rating',
+		'readonly' => false
 	);
 
 /**
@@ -71,6 +72,7 @@ class RatingHelper extends AppHelper {
  */
 	public function display($options = array(), $urlHtmlAttributes = array()) {
      	$options = array_merge($this->defaults, $options);
+
 		if (empty($options['foreignKey'])) {
 			throw new Exception(__d('ratings', 'You must set the id of the item you want to rate.'), E_USER_NOTICE);
 		}
@@ -130,11 +132,19 @@ class RatingHelper extends AppHelper {
 				$default['Rating']['result'] =  __('Rating failed to save. %s', $Rating->validate[key($Rating->invalidFields())]['message']);
 			}
 		}
-		$data = $Rating->find('first', array(
+		$data = $Rating->find('all', array(
 			'conditions' => array(
 				'Rating.model' => $options['model'],
 				'Rating.foreign_key' => $options['foreignKey'],
 				'Rating.parent_id' => null
+				),
+			'fields' => array(
+				'Rating.id',
+				'Rating.model',
+				'Rating.foreign_key',
+				'Rating.parent_id',
+				'Rating.value',
+				'AVG(Rating.value) AS RatingAverage'
 				)
 			));
 		return Set::merge($default, $data);
@@ -200,6 +210,7 @@ class RatingHelper extends AppHelper {
  */
 	public function starForm($options = array(), $urlHtmlAttributes = array()) {
 		$options = array_merge($this->defaults, $options);
+
 		$flush = false;
 		if (empty($options['foreignKey'])) {
 			trigger_error(__d('ratings', 'You must set the id of the item you want to rate.'), E_USER_NOTICE);
@@ -216,7 +227,7 @@ class RatingHelper extends AppHelper {
 			'type' => 'radio',
 			'legend' => false,
 			'value' => isset($options['value']) ? round($options['value']) : 0,
-			'class' => 'star',
+			'class' => isset($options['readonly']) ? 'readonly star' : 'star',
 			'options' => array_combine(range(1, $options['stars']), range(1, $options['stars']))));
 		if ($options['createForm']) {
 			if (!empty($options['target']) && !empty($options['createForm']['url']) && !empty($options['createForm']['ajaxOptions'])) {
@@ -240,7 +251,8 @@ class RatingHelper extends AppHelper {
  * @param char $foreignKey
  * @return array
  */
-	public function getRatings($modelName, $foreignKey) {
+	public function getRatings($modelName, $foreignKey, $options = array()) {
+		// $options // not used currently but prepping it for later :)
 		$contain = array('User');
 		App::uses('Rating', 'Ratings.Model');
 		$Rating = new Rating;

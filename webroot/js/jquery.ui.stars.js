@@ -159,7 +159,7 @@ $.widget('ui.stars', {
 
 			!o.forceSelect && self.callback(e, 'star');
 		})
-		.bind('mouseover.stars', function() {
+		.bind('mouseover.stars:not(.disabled)', function() {
 			if(o.disabled) return false;
 			var i = self.$stars.index(this);
 			fillTo(i, true);
@@ -188,7 +188,7 @@ $.widget('ui.stars', {
 
 			!o.forceSelect && self.callback(e, 'cancel');
 		})
-		.bind('mouseover.stars', function() {
+		.bind('mouseover.stars:not(.disabled)', function() {
 			if(self._disableCancel()) return false;
 			self.$cancel.addClass(o.cancelHoverClass);
 			fillNone();

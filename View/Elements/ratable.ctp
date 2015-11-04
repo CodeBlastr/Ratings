@@ -7,6 +7,8 @@
  * 
  * ex. echo $this->element('ratable', array('model' => 'MyModel', 'foreignKey' => $someForeignKey));
  * 
+ * ex2. echo $this->element('Ratings.ratable', array('createForm' => array('id' => 'ratingsform'), 'model' => 'MyModel', 'foreignKey' => $someForeignKey));
+ * 
  * There are a lot of additional options, but they are all contained in the Ratings/View/Helper/RatingHelper.php.
  * Additional settings given in the element call are passed directly from this element to the construct method of the helper. 
  * 
@@ -14,22 +16,17 @@
  * @author Buildrr LLC
  * @license MIT
  */
-if (!empty($model) && !empty($foreignKey)) {
-	$___dataForView['createForm']['id'] = !empty($createForm['id']) ? $createForm['id'] : __('rate%s%s', $model, $foreignKey);
-	
-	$RatingHelper = $this->Helpers->load('Ratings.Rating', $___dataForView);
-	echo $this->Html->css('Ratings.jquery.rating');
-	echo $this->Html->script('Ratings.jquery.rating.pack');
-	$data = $RatingHelper->handleData(array('model' => $model, 'foreignKey' => $foreignKey));  // we do this instead of in the helper, so that this element is more customizable
-	echo !empty($data['Rating']['result']) ? $data['Rating']['result'] : null;
-	echo  '<div class="stars">';
-	echo $RatingHelper->display(array(
-	    'foreignKey' => $data['Rating']['foreign_key'],
-	    'value' =>  $data['Rating']['value']
-	    ));
-	echo '</div>';
-} else {
-	echo __('model & foreignKey required for ratings');
-}
-
-
+if ((!empty($model) && !empty($foreignKey)) || (!empty($foreignKey) && !empty($value))) : ?>
+	<?php $RatingHelper = $this->Helpers->load('Ratings.Rating'); ?>
+	<?php $data = empty($value) ? $RatingHelper->handleData($dataForView) : array(array(array('RatingAverage' => $value)));  // dataForView contains all view variables including this that come with the element call ?>
+	<?php // $dataForView['value'] = $data['Rating']['value']; ?>
+	<?php $dataForView['value'] = $data[0][0]['RatingAverage']; ?>
+	<?php echo $this->Html->css('Ratings.jquery.rating'); ?>
+	<?php echo $this->Html->script('Ratings.jquery.rating.pack'); ?>
+	<?php // echo !empty($data['Rating']['result']) ? $data['Rating']['result'] : null; // no idea what this is, its not even in the database ?>
+	<div class="stars">
+		<?php echo $RatingHelper->display($dataForView); ?>
+	</div>
+<?php else : ?>
+	model & foreignKey or foreignKey & rating value is required for ratable element
+<?php endif; ?>
